@@ -1,0 +1,297 @@
+
+package inventario;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+//Importante
+import java.util.LinkedList;
+
+
+public class InventarioApp extends JFrame {
+    private DefaultTableModel tableModel;
+    private JTable table;
+    private JTextField txtNombre, txtCantidad, txtPrecio, txtProveedor, txtMarca;
+    private LinkedList<LinkedList<String>> data;
+  
+    public InventarioApp() {
+
+        setTitle("Aplicación de Inventario");
+        setSize(800, 200);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Inicializar LinkedList en el constructor
+         data = new LinkedList<>();
+
+        // Crear campos de texto
+        txtNombre = new JTextField(20);
+        txtCantidad = new JTextField(10);
+        txtPrecio = new JTextField(10);
+        txtProveedor = new JTextField(15);
+        txtMarca = new JTextField(15);
+
+        // Crear botones del primer frame
+        JButton btnNuevo = new JButton("Nuevo");
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnVerStock = new JButton("Ver Stock");
+
+        // Configurar escuchadores de eventos para el primer frame
+        btnNuevo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                limpiarCampos();
+            }
+        });
+
+        btnGuardar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Llama al método para guardar en el vector data
+                guardarEnData();
+                actualizarTabla();
+            }
+        });
+
+        btnVerStock.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                verStock();
+            }
+        });
+
+        // Configurar panel superior del primer frame con GridBagLayout
+        JPanel panelSuperior = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // Espaciado entre componentes
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panelSuperior.add(new JLabel("Nombre:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        panelSuperior.add(txtNombre, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panelSuperior.add(new JLabel("Cantidad:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        panelSuperior.add(txtCantidad, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panelSuperior.add(new JLabel("Precio:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        panelSuperior.add(txtPrecio, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        panelSuperior.add(new JLabel("Proveedor:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        panelSuperior.add(txtProveedor, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        panelSuperior.add(new JLabel("Marca:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        panelSuperior.add(txtMarca, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.gridheight = 5; // Ocupar 5 filas
+        panelSuperior.add(btnNuevo, gbc);
+
+        gbc.gridx = 3;
+        gbc.gridy = 0;
+        gbc.gridheight = 5; // Ocupar 5 filas
+        panelSuperior.add(btnGuardar, gbc);
+
+        gbc.gridx = 4;
+        gbc.gridy = 0;
+        gbc.gridheight = 5; // Ocupar 5 filas
+        panelSuperior.add(btnVerStock, gbc);
+
+        // Configurar diseño de la ventana principal
+        setLayout(new BorderLayout());
+        add(panelSuperior, BorderLayout.NORTH);
+
+        // Hacer visible el primer frame
+        setVisible(true);
+    }
+
+    private void limpiarCampos() {
+        txtNombre.setText("");
+        txtCantidad.setText("");
+        txtPrecio.setText("");
+        txtProveedor.setText("");
+        txtMarca.setText("");
+    }
+
+    private void guardarEnData() {
+        // Obtener los datos de los campos de texto en el primer frame
+        String nombre = txtNombre.getText();
+        String cantidad = txtCantidad.getText();
+        String precio = txtPrecio.getText();
+        String proveedor = txtProveedor.getText();
+        String marca = txtMarca.getText();
+
+        // Buscar si el producto ya existe en la lista data
+        int index = buscarProducto(nombre);
+
+        if (index != -1) {
+            // Si existe, sumar la nueva cantidad a la cantidad existente
+            LinkedList<String> row = data.get(index);
+            int nuevaCantidad = Integer.parseInt(row.get(1)) + Integer.parseInt(cantidad);
+            row.set(1, String.valueOf(nuevaCantidad));
+        } else {
+            // Si no existe, agregar los datos a la lista data
+            LinkedList<String> row = new LinkedList<>();
+            row.add(nombre);
+            row.add(cantidad);
+            row.add(precio);
+            row.add(proveedor);
+            row.add(marca);
+            data.add(row);
+        }
+
+        // Limpiar campos después de guardar en la lista data
+        limpiarCampos();
+    }
+
+    private int buscarProducto(String nombre) {
+        // Buscar el producto en la lista data por nombre
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).get(0).equals(nombre)) {
+                return i; // Devolver el índice si se encuentra
+            }
+        }
+        return -1; // Devolver -1 si no se encuentra
+    }
+
+    private void actualizarTabla() {
+        // Actualizar la tabla en el primer frame con los datos de data
+        if (tableModel == null) {
+            tableModel = new DefaultTableModel();
+            tableModel.addColumn("Nombre");
+            tableModel.addColumn("Cantidad");
+            tableModel.addColumn("Precio");
+            tableModel.addColumn("Proveedor");
+            tableModel.addColumn("Marca");
+            table = new JTable(tableModel);
+        }
+
+        // Limpiar la tabla antes de agregar los nuevos datos
+        tableModel.setRowCount(0);
+
+        // Llenar la tabla con los datos almacenados en la lista data
+        for (LinkedList<String> rowData : data) {
+            tableModel.addRow(rowData.toArray(new String[0]));
+        }
+    }
+
+     private void verStock() {
+        // Crear un nuevo frame para mostrar los detalles del stock
+        JFrame stockFrame = new JFrame("Detalles del Stock");
+        stockFrame.setSize(800, 400);
+        stockFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Crear un nuevo modelo de tabla para el frame de stock
+        DefaultTableModel stockTableModel = new DefaultTableModel();
+        stockTableModel.addColumn("Nombre");
+        stockTableModel.addColumn("Existencia");
+        stockTableModel.addColumn("Precio");
+        stockTableModel.addColumn("Proveedor");
+        stockTableModel.addColumn("Marca");
+
+        // Llenar la tabla de stock con los datos almacenados en el vector data
+        for (LinkedList<String> rowData : data) {  
+        stockTableModel.addRow(rowData.toArray(new String[0]));
+        }
+
+        // Crear la tabla de stock
+        JTable stockTable = new JTable(stockTableModel);
+
+        // Crear botones del segundo frame
+        JButton btnAgregar = new JButton("Agregar");
+        JButton btnModificar = new JButton("Modificar");
+        JButton btnBorrar = new JButton("Borrar");
+
+        // Configurar escuchadores de eventos para el segundo frame
+        btnAgregar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Cerrar el segundo frame y mostrar el primer frame
+                stockFrame.dispose();
+                setVisible(true);
+            }
+        });
+
+        btnModificar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Habilitar o deshabilitar la edición de la tabla
+                boolean enableEditing = !stockTable.isEnabled();
+                stockTable.setEnabled(enableEditing);
+
+                // Deseleccionar cualquier fila seleccionada al bloquear la tabla
+                if (!enableEditing) {
+                    stockTable.clearSelection();
+                }
+
+                btnModificar.setText(enableEditing ? "Bloquear" : "Modificar");
+            }
+        });
+
+        btnBorrar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Obtener la fila seleccionada solo si la tabla no está bloqueada
+                if (stockTable.isEnabled()) {
+                    int selectedRow = stockTable.getSelectedRow();
+
+                    // Verificar si se seleccionó una fila
+                    if (selectedRow != -1) {
+                        // Eliminar la fila de la tabla y del vector data
+                        stockTableModel.removeRow(selectedRow);
+                        data.remove(selectedRow);
+                    }
+                }
+            }
+        });
+
+        // Configurar panel superior del segundo frame
+        JPanel panelSuperiorStock = new JPanel(new FlowLayout());
+        panelSuperiorStock.add(btnAgregar);
+        panelSuperiorStock.add(btnModificar);
+        panelSuperiorStock.add(btnBorrar);
+
+        // Configurar diseño del segundo frame
+        stockFrame.setLayout(new BorderLayout());
+        stockFrame.add(new JScrollPane(stockTable), BorderLayout.CENTER);
+        stockFrame.add(panelSuperiorStock, BorderLayout.NORTH);
+
+        // Hacer la tabla no editable por defecto
+        stockTable.setEnabled(false);
+
+        // Hacer visible el segundo frame
+        stockFrame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new InventarioApp();
+            }
+        });
+    }
+}
